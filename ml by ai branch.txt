@@ -1,0 +1,229 @@
+# importing neccessay libraries
+from sklearn.preprocessing import OneHotEncoder
+
+import pandas as pd
+
+import warnings
+warnings.filterwarnings('ignore')
+
+### Q.1- Using "Dog_Bites_Data" dataset, perform One-hot Encoding Technique on "Gender" and "Brough" Columns in Dataset.
+
+```
+`# This is formatted as code`
+```
+
+
+
+dog_bite = pd.read_csv('Dog_Bites_Data.csv')
+
+
+dog_bite.head()
+
+# Finding datatype of each column
+
+dog_bite.info()
+
+# Performing One-hot encoding on 'Gender' and 'Brough' Columns
+
+ohe = OneHotEncoder(sparse_output = False, handle_unknown='ignore', drop='first')
+
+dog_bite_ohe = ohe.fit_transform(dog_bite[['Gender', 'Borough']])
+
+
+# Converting the OnehotEncoded data into DataFrame
+
+dog_bite_ohe = pd.DataFrame(dog_bite_ohe, columns=ohe.get_feature_names_out())
+
+
+# merging transformed column into dataset
+dog_bite = dog_bite.drop(['Gender', 'Borough'], axis=1)
+
+dog_bite = pd.concat([dog_bite, dog_bite_ohe], axis=1)
+
+dog_bite.info()
+
+#Q.2 - Using "Spaceship-titanic dataset , 
+#on Age Column apply mean and on ShoppingMall apply Median imputation
+# Loading Dataset into DataFrame
+
+
+space_titanic = pd.read_csv('spaceship titanic.csv')
+
+space_titanic.head()
+
+space_titanic.info()
+
+
+# Exploring Age and ShoppingMall column how many null values are present
+
+
+space_titanic[['Age','ShoppingMall']].isnull().sum()
+# Total 179 and 208 Null value present into age and shoppinmall column
+
+# Applying the Mean Imputation on Age Column
+
+space_titanic['Age'].fillna(space_titanic['Age'].mean(), inplace=True)
+
+
+# Applying the Meadian Imputation on ShoppingMall Column
+
+space_titanic['ShoppingMall'].fillna(space_titanic['ShoppingMall'].median(), inplace=True)
+
+
+# Rechecking null values present or not
+
+space_titanic[['Age','ShoppingMall']].isnull().sum()
+
+Q.3 - Using "spaceship-titanic datset: (Pipelines required to be created, without pipeline, some marks can be cut
+
+# Importing Neccesary libraries and functions
+
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.pipeline import Pipeline
+
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import make_column_transformer
+
+from sklearn.impute import SimpleImputer
+
+from sklearn.preprocessing import MinMaxScaler
+
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.model_selection import StratifiedKFold
+
+import numpy as np
+
+import pandas as pd
+
+import warnings
+warnings.filterwarnings('ignore')
+
+
+# Loading Dataset into DataFrame
+
+space_titanic = pd.read_csv('spaceship titanic.csv')
+
+space_titanic.head()
+
+space_titanic.info()
+
+# Checking the null Values of each column
+space_titanic[[ 'CryoSleep', 'Destination', 'Age', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']].isnull().sum()
+
+# Here we have CryoSleep, Destination, Age, FoodCourt, ShoppingMall, Spa, VRDeck columns having the Null Values
+
+a. Random Forest Algorithm to solve problem "What sorts of VIP from Earth were likely to be Transported" using cloumns CryoSleep, Destination, Age, FoodCourt, ShoppingMall, Spa, VRDeck as Features
+
+# Extracting features and target which we want to use
+
+X = space_titanic[[ 'CryoSleep', 'Destination', 'Age', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']]
+
+y = space_titanic['Transported']
+
+
+# Making Train Test Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=24)
+
+
+
+# Creating the column transformer which includes SimpleImputer with Mean Strategy and OneHotEncoding for categorical 
+Data
+mct = make_column_transformer(
+    (OneHotEncoder(handle_unknown='ignore'), ['CryoSleep', 'Destination']),
+    (SimpleImputer(strategy='mean'), ['Age', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']),
+    remainder='passthrough'
+)
+
+
+# Creating the pipeline with the column transformer and random forest classifier
+
+pipe = Pipeline([
+    ('MCT', mct),
+    ('RFC', RandomForestClassifier(random_state=24))
+])
+
+
+# Fit the pipeline to the training 
+pipe.fit(X_train, y_train)
+
+
+# Make predictions on the test data
+
+y_pred = pipe.predict(X_test)
+
+
+# Evaluate the model
+
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy}")
+
+c. Tune the parameters with random forest based on accuracy score using GRID Search CV with parameters of your choice
+kfold = StratifiedKFold(n_splits=5, shuffle= True, random_state=24)
+param_grid = {
+    'RFC__n_estimators': [20, 50, 100],
+    'RFC__max_depth': [None, 10, 20],
+    'RFC__min_samples_split': [2, 5, 10],
+    'RFC__min_samples_leaf': [10,20,30]
+}
+grid_search = GridSearchCV(pipe, param_grid, cv=kfold, scoring='accuracy')
+
+grid_search.fit(X_train, y_train)
+print("Best Pramas: ",grid_search.best_params_)
+print("Best Score: ",grid_search.best_score_)
+
+
+Q.4 - Using "spaceship-titanic" dataset's only numerical colums, perform k-mean clustering algorithm on dataset and find the best k based on silhouette score
+
+from sklearn.cluster import KMeans
+
+from sklearn.metrics import silhouette_score
+
+from sklearn.preprocessing import StandardScaler
+
+
+
+# Loading Dataset into DataFrame
+
+space_titanic = pd.read_csv('spaceship titanic.csv')
+space_titanic.head()
+
+
+# Select numerical columns
+numerical_cols = ['Age', 'RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
+numerical_data = space_titanic[numerical_cols]
+
+
+# Handle missing values using mean imputation
+numerical_data.fillna(numerical_data.mean(), inplace=True)
+
+# StandardScaler for Scale the numerical features
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(numerical_data)
+
+# Find the optimal k using silhouette score
+k_range = range(2, 10)
+silhouette_scores = []
+
+# loop for every k value
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(scaled_data)
+    labels = kmeans.labels_
+    silhouette_avg = silhouette_score(scaled_data, labels)
+    silhouette_scores.append(silhouette_avg)
+
+# Print the silhouette scores for each k
+for k, score in zip(k_range, silhouette_scores):
+    print(f"For k = {k}, the average silhouette score is: {score}")
+
+# Finding the best value of k
+best_k = k_range[silhouette_scores.index(max(silhouette_scores))]
+print(f"\nThe best k value based on silhouette score is: {best_k}")
